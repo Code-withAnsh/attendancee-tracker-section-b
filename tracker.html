@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Attendance Tracker</title>
+    <style>
+        :root {
+            --primary: #26a69a;
+            --secondary: #80deea;
+            --background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--background);
+            min-height: 100vh;
+            padding: 1rem;
+            color: #263238;
+        }
+
+        h1 {
+            text-align: center;
+            margin: 2rem 0;
+            font-size: 2.5rem;
+            color: var(--primary);
+            animation: fadeIn 1s ease;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .subject {
+            border: 2px solid var(--secondary);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.9);
+            transition: transform 0.3s ease;
+            animation: subjectEntry 0.5s ease forwards;
+        }
+
+        .subject:hover {
+            transform: translateY(-3px);
+        }
+
+        .subject h2 {
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-size: 1.4rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #37474f;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #cfd8dc;
+            border-radius: 0.8rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(38, 166, 154, 0.2);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.8rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(38, 166, 154, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            padding: 1rem;
+            border-radius: 0.8rem;
+            margin-top: 1rem;
+            background: rgba(38, 166, 154, 0.1);
+            border: 2px solid var(--secondary);
+            color: #00695c;
+            font-weight: 500;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(30px) scale(0.98); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        @keyframes subjectEntry {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                border-radius: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subject {
+                padding: 1rem;
+            }
+
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 0.5rem;
+            }
+
+            input[type="number"] {
+                padding: 0.6rem;
+            }
+
+            .result {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <h1>📚 Smart Attendance Tracker</h1>
+    <div class="container">
+        <div class="controls">
+            <div class="form-group">
+                <label for="totalDays">Remaining College Days:</label>
+                <input type="number" id="totalDays" value="45" min="0" />
+            </div>
+            <div class="form-group">
+                <label for="desiredOverall">Desired Overall Attendance (%):</label>
+                <input type="number" id="desiredOverall" value="85" min="0" max="100" />
+            </div>
+        </div>
+
+        <div id="subjects"></div>
+
+        <div class="actions">
+            <button onclick="addSubject()">➕ Add Subject</button>
+            <button onclick="calculateAttendance()">📊 Calculate</button>
+        </div>
+
+        <div class="result" id="overallResult"></div>
+    </div>
+
+    <script>
+        // JavaScript remains mostly the same with minor improvements
+        let subjectList = [
+            { name: 'Organisation Behaviour' },
+            { name: 'Digital Electronics' },
+            { name: 'Lab' },
+            { name: 'C Programming' },
+            { name: 'Mathematics' },
+            { name: 'Accounting' }
+        ];
+
+        const subjectsDiv = document.getElementById('subjects');
+
+        function renderSubjects() {
+            subjectsDiv.innerHTML = '';
+            subjectList.forEach((subj, index) => {
+                const subjectElement = document.createElement('div');
+                subjectElement.className = 'subject';
+                subjectElement.innerHTML = `
+                    <h2>${subj.name}</h2>
+                    <div class="form-group">
+                        <label>Total Classes Conducted:</label>
+                        <input type="number" id="total_${index}" placeholder="e.g., 10" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Classes Attended:</label>
+                        <input type="number" id="attended_${index}" placeholder="e.g., 8" min="0" />
+                    </div>
+                    <div class="form-group">
+                        <label>Desired Attendance % for ${subj.name}:</label>
+                        <input type="number" id="desired_${index}" value="85" min="0" max="100" />
+                    </div>
+                    <div class="result" id="result_${index}"></div>
+                `;
+                subjectsDiv.appendChild(subjectElement);
+            });
+        }
+
+        function addSubject() {
+            const name = prompt("Enter subject name:");
+            if (name) {
+                subjectList.push({ name });
+                renderSubjects();
+            }
+        }
+
+        function calculateAttendance() {
+            let totalConducted = 0;
+            let totalAttended = 0;
+            const overallDesire = parseInt(document.getElementById("desiredOverall").value) || 85;
+            const daysLeft = parseInt(document.getElementById("totalDays").value) || 0;
+            
+            const sundays = Math.floor(daysLeft / 7);
+            const actualClassDays = daysLeft - sundays;
+            let totalFutureClasses = 0;
+
+            subjectList.forEach((subj, index) => {
+                const total = parseInt(document.getElementById(`total_${index}`).value) || 0;
+                const attended = parseInt(document.getElementById(`attended_${index}`).value) || 0;
+                const desired = parseInt(document.getElementById(`desired_${index}`).value) || 85;
+
+                const future = Math.floor(actualClassDays / 6 * 3);
+                const projectedTotal = total + future;
+                const required = Math.ceil((desired / 100) * projectedTotal);
+                const stillNeeded = Math.max(0, required - attended);
+                const percent = total ? ((attended / total) * 100).toFixed(1) : 0;
+
+                totalConducted += total;
+                totalAttended += attended;
+                totalFutureClasses += future;
+
+                const resultElement = document.getElementById(`result_${index}`);
+                resultElement.innerHTML = `
+                    <div>Current: <strong>${percent}%</strong></div>
+                    <div>Need <strong>${stillNeeded}/${future}</strong> classes to reach ${desired}%</div>
+                `;
+            });
+
+            const overallTotal = totalConducted + totalFutureClasses;
+            const overallRequiredClasses = Math.ceil((overallDesire / 100) * overallTotal);
+            const overallStillNeeded = Math.max(0, overallRequiredClasses - totalAttended);
+            const overallCurrent = totalConducted ? ((totalAttended / totalConducted) * 100).toFixed(1) : 0;
+
+            const overallResult = document.getElementById("overallResult");
+            overallResult.innerHTML = `
+                <div>📊 Overall Attendance: <strong>${overallCurrent}%</strong></div>
+                <div>🎯 Required in next ${totalFutureClasses} classes: <strong>${overallStillNeeded}</strong></div>
+            `;
+        }
+
+        renderSubjects();
+    </script>
+</body>
+</html>
